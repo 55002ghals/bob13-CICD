@@ -1,30 +1,31 @@
+
 pipeline {
     agent any
 
     environment {
-        // Harbor 호스트명 또는 IP (HTTP 모드라면 http:// 사용)
+        // Harbor registry IP (for HTTP mode, use http://)
         REGISTRY = "http://43.201.158.81"
-        // Harbor 프로젝트명 (예: myproject)
+        // Harbor project name (e.g., myproject)
         PROJECT = "bob13-project1"
-        // 어플리케이션 이름 (이미지 이름)
+        // Application (image) name
         APP_NAME = "test1"
-        // 이미지 태그 (빌드 번호 사용)
+        // Image tag (using BUILD_ID)
         IMAGE_TAG = "${env.BUILD_ID}"
-        // Jenkins에 등록한 Harbor Credentials의 ID
+        // Jenkins Harbor credentials ID
         CREDENTIALS_ID = "admin"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // 소스코드를 체크아웃
+                // Checkout source code
                 checkout scm
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    // 현재 디렉토리에 있는 Dockerfile을 이용하여 이미지를 빌드
+                    // Build the Docker image using the Dockerfile in the current directory
                     dockerImage = docker.build("${REGISTRY}/${PROJECT}/${APP_NAME}:${IMAGE_TAG}")
                 }
             }
@@ -32,10 +33,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Harbor에 인증 후, 이미지를 Push
+                    // Push the image to Harbor
                     docker.withRegistry(REGISTRY, CREDENTIALS_ID) {
-                        dockerImage.push()  // 기본 태그 (여기서는 BUILD_ID 태그) Push
-                        dockerImage.push("latest")  // 추가로 latest 태그도 Push (선택 사항)
+                        dockerImage.push()  // Push the image tagged with BUILD_ID
+                        dockerImage.push("latest")  // Also push the "latest" tag (optional)
                     }
                 }
             }
@@ -43,10 +44,11 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
-                    // 빌드 후 로컬 이미지 정리 (선택 사항)
+                    // Remove the local image to free up space (optional)
                     sh "docker rmi ${REGISTRY}/${PROJECT}/${APP_NAME}:${IMAGE_TAG} || true"
                 }
             }
         }
     }
 }
+
