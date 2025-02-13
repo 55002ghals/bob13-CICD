@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         // Harbor registry IP (for HTTP mode, use http://)
-        REGISTRY = "http://43.201.158.81"
+        REGISTRY = "43.201.158.81"
         // Harbor project name (e.g., myproject)
         PROJECT = "bob13-project1"
         // Application (image) name
