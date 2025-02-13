@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     // Push the image to Harbor
-                    docker.withRegistry(REGISTRY, CREDENTIALS_ID) {
+                    docker.withRegistry("http://" + REGISTRY, CREDENTIALS_ID) {
                         dockerImage.push()  // Push the image tagged with BUILD_ID
                         dockerImage.push("latest")  // Also push the "latest" tag (optional)
                     }
