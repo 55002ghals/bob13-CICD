@@ -48,7 +48,7 @@ def board():
     if 'logged_in' not in session:
         return redirect(url_for('login'))
     
-    nodejs_url = 'http://nodejs-service.goals.svc.cluster.local:3000/'
+    nodejs_url = 'http://goal-service.goals.svc.cluster.local:3000/'
     try:
         resp=requests.get(nodejs_url)
     except Exception as e:
@@ -59,7 +59,7 @@ def board():
 @app.route('/add-goal', methods=['POST'])
 def add_goal():
     # 요청 데이터를 그대로 Node.js 서비스로 전달
-    nodejs_url = 'http://nodejs-service.goals.svc.cluster.local:3000/add-goal'
+    nodejs_url = 'http://goal-service.goals.svc.cluster.local:3000/add-goal'
     try:
         # Node.js 서비스에 POST 요청 보내기 (폼 데이터 전달)
         resp = requests.post(nodejs_url, data=request.form)
