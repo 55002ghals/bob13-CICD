@@ -12,7 +12,7 @@ app.config['SESSION_TYPE'] = 'filesystem'
 # MySQL DB Connection
 def get_db_connection():
     conn = mysql.connector.connect(
-        host=os.getenv('MYSQL_HOST', 'mysql-service'),
+        host=os.getenv('MYSQL_HOST', 'mysql-login-service'),
         user=os.getenv('MYSQL_USER', 'admin'),
         password=os.getenv('MYSQL_PASSWORD', 'admin'),
         database=os.getenv('MYSQL_DB', 'user_db')
