@@ -8,7 +8,7 @@ pipeline {
         PROJECT1 = "bob13-project1"
         PROJECT2 = "bob13-project2"
         // Application (image) name
-        APP_NAME = "login" /
+        APP_NAME = "login"
         // Image tag (using BUILD_ID)
         IMAGE_TAG = "${env.BUILD_ID}"
         // Jenkins Harbor credentials ID
