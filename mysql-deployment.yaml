@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: login
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root_password"
+            - name: MYSQL_DATABASE
+              value: "user_db"
+            - name: MYSQL_USER
+              value: "admin"
+            - name: MYSQL_PASSWORD
+              value: "admin"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-init
+          configMap:
+            name: mysql-init-script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-script
+  namespace: login
+data:
+  init.sql: |
+    -- 데이터베이스 생성 (이미 존재하면 생성 안 함)
+    CREATE DATABASE IF NOT EXISTS user_db;
+    USE user_db;
+
+    -- users 테이블 생성 (존재하지 않을 경우만)
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL
+    );
+
+    INSERT IGNORE INTO users (username, password) VALUES ('admin', 'admin');
+    CREATE USER IF NOT EXISTS 'admin'@'%' IDENTIFIED BY 'admin';
+    CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'admin';
+
+    GRANT ALL PRIVILEGES ON user_db.* TO 'admin'@'%';
+    GRANT ALL PRIVILEGES ON user_db.* TO 'admin'@'localhost';
+    FLUSH PRIVILEGES;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: login
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

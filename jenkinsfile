@@ -1,14 +1,14 @@
-
 pipeline {
     agent any
 
     environment {
         // Harbor registry IP (for HTTP mode, use http://)
         REGISTRY = "43.201.158.81"
-        // Harbor project name (e.g., myproject)
-        PROJECT = "bob13-project1"
+        // Harbor project names
+        PROJECT1 = "bob13-project1"
+        PROJECT2 = "bob13-project2"
         // Application (image) name
-        APP_NAME = "test1"
+        APP_NAME = "login" /
         // Image tag (using BUILD_ID)
         IMAGE_TAG = "${env.BUILD_ID}"
         // Jenkins Harbor credentials ID
@@ -18,25 +18,32 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Checkout source code
                 checkout scm
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image using the Dockerfile in the current directory
-                    dockerImage = docker.build("${REGISTRY}/${PROJECT}/${APP_NAME}:${IMAGE_TAG}")
+                    // 기본 이미지를 PROJECT1 경로에 빌드 (예: bob13-project1/test1:${IMAGE_TAG})
+                    dockerImage = docker.build("${REGISTRY}/${PROJECT1}/${APP_NAME}:${IMAGE_TAG}")
                 }
             }
         }
-        stage('Push Docker Image') {
+        stage('Push Docker Images') {
             steps {
                 script {
-                    // Push the image to Harbor
                     docker.withRegistry("http://" + REGISTRY, CREDENTIALS_ID) {
-                        dockerImage.push()  // Push the image tagged with BUILD_ID
-                        dockerImage.push("latest")  // Also push the "latest" tag (optional)
+                        // PROJECT1에 대해 push
+                        dockerImage.push()  // ${IMAGE_TAG} 태그
+                        dockerImage.push("latest")  // latest 태그
+
+                        // PROJECT2에 동일 이미지를 push하기 위해 tag 변경
+                        // 우선, 기존 이미지가 PROJECT1에 저장되어 있으므로 이를 PROJECT2 태그로 재태깅한다.
+                        sh "docker tag ${REGISTRY}/${PROJECT1}/${APP_NAME}:${IMAGE_TAG} ${REGISTRY}/${PROJECT2}/${APP_NAME}:${IMAGE_TAG}"
+                        sh "docker tag ${REGISTRY}/${PROJECT1}/${APP_NAME}:latest ${REGISTRY}/${PROJECT2}/${APP_NAME}:latest"
+                        // PROJECT2에 push
+                        sh "docker push ${REGISTRY}/${PROJECT2}/${APP_NAME}:${IMAGE_TAG}"
+                        sh "docker push ${REGISTRY}/${PROJECT2}/${APP_NAME}:latest"
                     }
                 }
             }
@@ -44,11 +51,11 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
-                    // Remove the local image to free up space (optional)
-                    sh "docker rmi ${REGISTRY}/${PROJECT}/${APP_NAME}:${IMAGE_TAG} || true"
+                    // 빌드 후 로컬에 저장된 이미지를 제거 (필요시)
+                    sh "docker rmi ${REGISTRY}/${PROJECT1}/${APP_NAME}:${IMAGE_TAG} || true"
+                    sh "docker rmi ${REGISTRY}/${PROJECT2}/${APP_NAME}:${IMAGE_TAG} || true"
                 }
             }
         }
     }
 }
-
