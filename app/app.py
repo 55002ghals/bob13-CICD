@@ -38,7 +38,7 @@ def login():
             session['username'] = username
             return redirect(url_for('board'))
         else:
-            return "로그인 실패. 다시 시도하세요."
+            return "로그인 실패!!! 다시 시도하세요."
 
     return render_template('login.html')
 
